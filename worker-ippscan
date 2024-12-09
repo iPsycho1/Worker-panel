@@ -1,0 +1,119 @@
+// Version 1.1.0
+// Tips: Change your subLinks accordingly. Note that only ws+tls+443 configs will work.
+
+const subLinks = [
+  'https://raw.githubusercontent.com/M-Mashreghi/Free-V2ray-Collector/main/Files/Config_by_country/server_SG.txt',
+  'https://raw.githubusercontent.com/M-Mashreghi/Free-V2ray-Collector/main/Files/Config_by_country/server_FR.txt',
+  'https://raw.githubusercontent.com/M-Mashreghi/Free-V2ray-Collector/main/Files/Config_by_country/server_FI.txt',
+  'https://raw.githubusercontent.com/M-Mashreghi/Free-V2ray-Collector/main/Files/Config_by_country/server_DE.txt',
+];
+
+export default {
+  async fetch(request) {
+    const url = new URL(request.url);
+
+    if (url.pathname === '/') {
+      return new Response(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <meta name="description" content="IP Scanner & Subscription Link Generator">
+          <title>IPPSCAN Worker Panel</title>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+            body {
+              font-family: 'Poppins', sans-serif;
+              color: #fff;
+              background: #121212;
+              margin: 0;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              min-height: 100vh;
+            }
+            .container {
+              background: rgba(255, 255, 255, 0.1);
+              backdrop-filter: blur(10px);
+              border-radius: 10px;
+              padding: 40px;
+              text-align: center;
+              max-width: 500px;
+              width: 90%;
+              box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            }
+            h1 {
+              font-size: 2.5em;
+              margin-bottom: 20px;
+              background: linear-gradient(90deg, #ff8a00, #e52e71);
+              -webkit-background-clip: text;
+              -webkit-text-fill-color: transparent;
+            }
+            .btn {
+              margin-top: 15px;
+              padding: 10px 20px;
+              font-size: 1em;
+              background: #3b3b3b;
+              border: none;
+              border-radius: 5px;
+              color: #fff;
+              cursor: pointer;
+              transition: background 0.3s ease;
+            }
+            .btn:hover {
+              background: #575757;
+            }
+            a {
+              text-decoration: none;
+              color: #00bcd4;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>IPPSCAN Worker Panel</h1>
+            <p>برای دریافت آی‌پی جدید کلید، دکمه زیر را بزنید:</p>
+            <button id="generate" class="btn">Generate Clean IP</button>
+            <div id="result" style="margin-top: 20px; word-break: break-all;"></div>
+            <p>Join our Telegram: <a href="https://t.me/ippscan" target="_blank">@ippscan</a></p>
+          </div>
+          <script>
+            document.getElementById('generate').onclick = async () => {
+              try {
+                const response = await fetch('https://raw.githubusercontent.com/ircfspace/cf2dns/refs/heads/master/list/ipv4.json');
+                const data = await response.json();
+                const cleanIp = data[Math.floor(Math.random() * data.length)].ip;
+                const workerUrl = window.location.hostname;
+                document.getElementById('result').innerHTML = \`<a href="https://\${workerUrl}/sub/\${cleanIp}" target="_blank">https://\${workerUrl}/sub/\${cleanIp}</a>\`;
+              } catch (error) {
+                document.getElementById('result').textContent = 'Error fetching IP. Please try again.';
+              }
+            };
+          </script>
+        </body>
+        </html>
+      `, {
+        headers: { 'Content-Type': 'text/html' },
+      });
+    }
+
+    if (url.pathname.startsWith('/sub')) {
+      let newConfigs = '';
+      for (const subLink of subLinks) {
+        try {
+          const resp = await fetch(subLink);
+          if (resp.ok) {
+            let configs = await resp.text();
+            newConfigs += configs + '\n';
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+      return new Response(newConfigs, { headers: { 'Content-Type': 'text/plain' } });
+    }
+
+    return new Response('Not Found', { status: 404 });
+  },
+};
